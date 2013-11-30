@@ -2,8 +2,8 @@ require 'spec_helper'
 # Rename this file to classname_spec.rb
 # Check other boxen modules for examples
 # or read http://rspec-puppet.com/tutorial/
-describe 'template' do
+describe 'menumeters' do
   it do
-    should contain_anchor('Hello_World')
+    should contain_package('menumeters')
   end
 end
