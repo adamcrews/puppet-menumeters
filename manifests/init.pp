@@ -14,13 +14,13 @@
 #
 #   default: /Applications/MenuMeters Installer.app/Contents/Resources/InstallTool
 #
-# [*installer_flag*]
-#   String of arguments to $installer_tool. Known values are
-#   --installuser and --installlibrary, which are mutually
-#   exclusive. Elevated privs are likely required for
-#   --installlibrary, which has not been tested.
+# [*installer_method*]
+#   String indicating method of MenuMeters install. Valid options:
 #
-#   default: --installuser
+#   user - Install MenuMeters to current user's Library folder
+#   system - Install MenuMeters to system-wide Library folder
+#
+#   default: user
 #
 # === Variables
 #
@@ -42,13 +42,23 @@
 class menumeters (
   $installer_source = 'http://www.ragingmenace.com/software/download/MenuMeters.dmg',
   $installer_tool = '/Applications/MenuMeters Installer.app/Contents/Resources/InstallTool',
-  $installer_flag = '--installuser',
+  $installer_method = 'user',
 ) {
 
-  $installer_creates = $installer_flag ? {
-    '--installuser' => "/Users/${::boxen_user}/Library/PreferencePanes/MenuMeters.prefPane",
-    '--installlibrary' => '/Library/PreferencePanes/MenuMeters.prefPane',
-    default => fail("Value for \$installer_tool must be --installuser or --installlibrary, not ${installer_tool}."),
+  case $installer_method {
+    'user': {
+      $installer_user = $::boxen_user
+      $installer_creates = "/Users/${::boxen_user}/Library/PreferencePanes/MenuMeters.prefPane"
+      $installer_flag = '--installuser'
+    }
+    'system': {
+      $installer_user = 'root'
+      $installer_creates = '/Library/PreferencePanes/MenuMeters.prefPane'
+      $installer_flag = '--installlibrary'
+    }
+    default: {
+      fail("\$installer_method must be user or system, not ${installer_method}")
+    }
   }
 
   package { 'menumeters':
@@ -61,6 +71,7 @@ class menumeters (
   exec { 'exec_menumeters_prefpane_install':
     command  => "\"${installer_tool}\" ${installer_flag}",
     creates  => $installer_creates,
+    user     => $installer_user,
   }
 
 }
